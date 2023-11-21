@@ -367,6 +367,21 @@ def create_BGP_message(route_table, ASN):
 # bgp_output = create_BGP_message("rutas/rutas_R2_v3_mtu.txt", 8882)
 # print("bgp_output = bgp_mssg_example ? {}".format(bgp_output == bgp_mssg_example))
 
+# función que ejecuta el algoritmo BGP, recibe el socketUDP que representa al router, el archivo de la tabla de rutas y el ASN
+def run_BGP(socket, route_table, ASN):
+    # se consiguen las líneas de la tabla de rutas 
+    with open(route_table) as f:
+        # se leen todas las líneas y se guardan en una lista
+        r_lines = f.readlines()
+    
+    # se crea el mensaje BGP que se enviará a los otros routers
+    bpg_routes = create_BGP_message(route_table, ASN)
+
+    # lista que guardará pares con el 
+
+    # se consiguen las direcciones de salto para todos los vecinos
+
+
 # clase que representa todas las posibles salidas del router para una dirección de destino específica, en el router actual
 class Forward:
     def __init__(self, destination_address):
@@ -388,17 +403,18 @@ class Forward:
         for line in route_table:
             # se divide la línea por componente
             line = line.split()
+            # se consigue el largo de la lista
+            len_line = len(line)
             
             # IP que reprsenta la red
             cidr = line[0]
-            # rangos de los puertos
-            inf_r = int(line[1])
-            sup_r = int(line[2])
+            # puerto de destino de la tabla
+            port_destination_table = int(line[1])
 
             # si se encuentra una línea que corresponde
-            if((ip_destination == cidr) and ((inf_r <= port_destination) and (port_destination <= sup_r))):
+            if((ip_destination == cidr) and (port_destination_table == port_destination)):
                 # se actualiza la lista con el par ip lista y el MTU
-                self.jumps.append(((line[3], int(line[4])), int(line[5])))
+                self.jumps.append(((line[len_line-3], int(line[len_line-2])), int(line[len_line-1])))
         
         # se inicializa el índice
         self.i = 0

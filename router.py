@@ -3,7 +3,9 @@ import socket
 import aux_functions
 
 # tamaño del buffer
-buff_size = 256
+buff_size = 2048
+# mensaje start bgp
+start_bgp = "START_BGP"
 
 # ip del router
 ip = sys.argv[1]
@@ -65,8 +67,14 @@ while True:
                 frag_dicc.pop(frag_id)
                 # se pasa a estructura
                 final_mssg = aux_functions.parse_packet(final_mssg.encode())
-                # se imprime el mensaje
-                print(final_mssg[7])
+
+                # se debe revisar si el mensaje es un START BGP
+                if(final_mssg[7] == start_bgp):
+                    # se ejecuta el algoritmo
+                    aux_functions.run_BGP(router_socket, route_table, port)
+                else:
+                    # se imprime el mensaje
+                    print(final_mssg[7])
         # si no, se debe hacer forwarding
         else:
             # se consigue la ruta para hacer forwarding
