@@ -1,0 +1,14 @@
+1.Hola!
+2.este es un mensaje de prueba
+3.se tienen muchas líneas 
+4.seguidas, en cada línea 
+5.se tiene un número, el 
+6.número indíca el orden 
+7.original, para comprobar
+8.el orden de los mensajes
+9.se debe revisar su número
+10.asociado, si los números 
+11.están en orden creciente, 
+12.entonces llegaron en el
+13.orden correcto! 
+14.Adiós!
