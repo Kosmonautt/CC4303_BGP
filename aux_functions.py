@@ -319,6 +319,54 @@ def reassemble_IP_packet(fragment_list):
 # IP_packet_v2 = IP_packet_v2_str.encode()
 # print("IP_packet_v1 = IP_packet_v2 ? {}".format(IP_packet_v1 == IP_packet_v2))
 
+# función que crea un mensaje BGP con el formato dado en las instrucciones, recibe el nombre del archivo con la tabla de rutas y el ASN asociado a este
+def create_BGP_message(route_table, ASN):
+    # variable que almacenará las lineas de la tabla
+    r_lines = None
+
+    # se abre el archivo con la tabla de rutas
+    with open(route_table) as f:
+        # se leen todas las líneas y se guardan en una lista
+        r_lines = f.readlines()
+
+    # donde se guardará el mensaje BGP
+    bgp_mssg = "BGP_ROUTES\n{}\n".format(ASN)
+
+    # para cada línea de la tabla de rutas
+    for line in r_lines:
+        # se divide el mensaje por el espacio
+        line = line.split()
+        # se consigue la lista con los ASN
+        asn_list = line[1:len(line)-3]
+        # para cada elemento de la lista
+        for i in range(0,len(asn_list)):
+            # se agrega al mensaje
+            bgp_mssg += asn_list[i]
+            # si no es el último, se agrega un espacio en blanco
+            if(i != len(asn_list)-1):
+                bgp_mssg += " "
+            # si no, un salto de línea
+            else:
+                bgp_mssg += "\n"
+        
+    # finalmente se agrega el mensaje "END_ROUTES"
+    bgp_mssg += "END_ROUTES"
+             
+    # se retorna el mensaje
+    return bgp_mssg
+
+# test para comprobar que funcione 
+
+# bgp_mssg_example = '''BGP_ROUTES
+# 8882
+# 8881 8882
+# 8883 8882
+# 8884 8882
+# END_ROUTES'''
+
+# bgp_output = create_BGP_message("rutas/rutas_R2_v3_mtu.txt", 8882)
+# print("bgp_output = bgp_mssg_example ? {}".format(bgp_output == bgp_mssg_example))
+
 # clase que representa todas las posibles salidas del router para una dirección de destino específica, en el router actual
 class Forward:
     def __init__(self, destination_address):
