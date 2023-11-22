@@ -1,4 +1,5 @@
 import socket
+import timerList
 
 # tamaño del buffer
 buff_size = 2048
@@ -537,8 +538,16 @@ def run_BGP(socket_sender: socket.socket, route_table, ASN):
         # se envía el mensaje bgp
         socket_sender.sendto(start_mssg, (ip, pair[1]))  
 
+    # timer
+    timer = timerList.TimerList(10,1)
+    timer.start_timer(0)
+
     # se empieza a recibir mensajes BGP de los otros vecinos
     while True:
+        # si se hace timeout, se debe retornar
+        if len(timer.get_timed_out_timers()) == 1:
+            return
+
         # se recibe un mensaje de vecino
         mssg, address = socket_sender.recvfrom(buff_size)
         # se pasa a estructura
@@ -593,12 +602,31 @@ def run_BGP(socket_sender: socket.socket, route_table, ASN):
                             # se agrega a la lista actual de rutas
                             ASN_routes_self.append(new_route)
                 
-                # 
+                # si se actualizó
+                if(updated):
+                    # se debe actualizar la tabla de rutas
+                    new_route_table([ASN, ASN_routes_self], route_table)
 
+                    # y se deben enviar mensaje nuevos
+                    # se crea un mensaje de rutas nuevo
+                    new_BGP_mssg = create_BGP_message(route_table, ASN)
 
-                        
+                    # se consigue una nueva lista de pares lista que guardará 
+                    # pares con el vecino al que se quiere llegar y el vecino al que se debe ir
+                    new_pair_dest_hop_list = pairs_dest_hop(route_table)
                     
+                    # se envía el mensaje BGP nuevo para todos los vecinos
+                    for pair in new_pair_dest_hop_list:
+                        # se crea el mensaje
+                        new_BGP_mssg = create_packet([ip, pair[0], ttl, id, 0, len(new_BGP_mssg.encode()), 0, new_BGP_mssg]).encode()
+                        # se aumenta el id
+                        id += 1
+                        # se envía el mensaje start bgp
+                        socket_sender.sendto(new_BGP_mssg, (ip, pair[1]))      
 
+                    # luego de enviar los mensaje se reinicia el timer
+                    timer = timerList.TimerList(10,1)
+                    timer.start_timer(0)                      
 
 # clase que representa todas las posibles salidas del router para una dirección de destino específica, en el router actual
 class Forward:
