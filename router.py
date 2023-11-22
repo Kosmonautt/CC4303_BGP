@@ -72,6 +72,9 @@ while True:
                 if(final_mssg[7] == start_bgp):
                     # se ejecuta el algoritmo
                     aux_functions.run_BGP(router_socket, route_table, port)
+                    # 
+                    print("ALGORITMO EJECUTADO")
+
                 else:
                     # se imprime el mensaje
                     print(final_mssg[7])
