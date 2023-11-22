@@ -458,6 +458,46 @@ def pairs_dest_hop(route_table):
 # pair_list = pairs_dest_hop("rutas_completas_3/rutas_R1_v3_mtu.txt")
 # print("pair_list_func = pair_list ? {}".format(pair_list == [(8882,8882), (8883,8882)]))
 
+# función que recibe una lista con el ASN en primera posición y en segunda posición una lista de listas
+# que representan las rutas ASN, también recibe un arhcivo de texto y lo sobreescribe para crear una nueva
+# tabla de rutas
+def new_route_table(ASN_struct, route_table):
+    # ip de localhost
+    ip = "127.0.0.1"
+    # MTU
+    MTU = "1000"
+
+    # texto que se escribirá en la tabla de rutas
+    new_txt = ""
+    # se abre el archivo
+    f = open(route_table, "w")
+
+    # para cada ruta en la lista de rutas
+    for route in ASN_struct[1]:
+        # se agrega la IP
+        new_txt += ip
+        # se consigue el siguiente salto
+        nxt_jump = str(route[len(route)-2])
+        # para cada ASN se agrega a la ruta 
+        for ASN in route:
+            new_txt += " "+str(ASN)
+        # se agrega la IP de nuevo
+        new_txt += " "+ip
+        # se agrega el siguiente salto, MTU y el salto de linea
+        new_txt += " "+nxt_jump+" "+MTU+"\n"
+        
+    # se elimina el útlimo salto de lnea
+    new_txt = new_txt[0:len(new_txt)-1]
+
+    # se sobreescribe el archivo
+    f.write(new_txt)
+    # se cierra el archivo
+    f.close()
+
+# # test de funcionamiento
+# bgp_list = [8882, [[8881, 8882], [8883, 8882], [8884, 8882], [8885, 8884, 8882]]]
+# new_route_table(bgp_list, "new_file.txt")
+
 # función que ejecuta el algoritmo BGP, recibe el socketUDP que representa al router, el archivo de la tabla de rutas y el ASN
 def run_BGP(socket_sender: socket.socket, route_table, ASN):
     # mensaje start bgp
@@ -512,8 +552,52 @@ def run_BGP(socket_sender: socket.socket, route_table, ASN):
             # si el mensaje parseado es una lista y no none, entonces se continua
             if(parsed_bgp != None):
                 # bgp_list = [8882, [[8881, 8882], [8883, 8882], [8884, 8882]]]
-                # se consiguen 
-                pass
+                
+                # se obtiene la lista con las rutas (listas) del vecino que se acaba de recibir
+                ASN_routes_neighbor = parsed_bgp[1]
+                # se crea un mensaje BGP con las rutas ASN de nuestro router (de nuevo porque puede haber sido actualizada)
+                current_BPG_message = create_BGP_message(route_table, ASN)
+                # se pasa a una lista 
+                ASN_routes_self = parse_BGP_message(current_BPG_message)[1]
+                # el largo de la lista de rutas actual
+                len_ASN_routes_self = len(ASN_routes_self)
+                # dice si la tabla de rutas ha sido actualizada
+                updated = False
+
+                # se revisan las rutas que se recibieron del vecino
+                for ASN_new_route in ASN_routes_neighbor:
+                    # si es que el ASN propio está en la lista de descarta pues puede generar ciclos
+                    if(not (ASN in ASN_new_route)):
+                        # se consigue la dirección de destino del la ruta nueva
+                        new_route_dest = ASN_new_route[0]
+                        # dice si la ruta hacia la dirección de destino estaba en la lista de rutas
+                        existed = False 
+                        # se revisa la lista de rutas actuales
+                        for i in range(0, len_ASN_routes_self):
+                            # para cada uno se consigue la i-ésima dirección de destino
+                            dest_i = ASN_routes_self[i][0]
+                            # si la ruta de destino es igual 
+                            if(dest_i == new_route_dest):
+                                # se crea la nueva ruta
+                                new_route = ASN_new_route.append(ASN)
+                                # entonces se debe elegir la ruta más corta
+                                if(len(ASN_new_route) < len(new_route)):
+                                    ASN_routes_self[i] = new_route
+                                    # también se cambian las flags de existed y updated
+                                    existed = True
+                                    updated = True
+                        # en el caso de que no haya existido la ruta, se agrega a la lista de rutas, agregando nuestro ASN
+                        if(not existed):
+                            # se crea la nueva ruta
+                            new_route = ASN_new_route.append(ASN)
+                            # se agrega a la lista actual de rutas
+                            ASN_routes_self.append(new_route)
+                
+                # 
+
+
+                        
+                    
 
 
 # clase que representa todas las posibles salidas del router para una dirección de destino específica, en el router actual
