@@ -592,11 +592,11 @@ def run_BGP(socket_sender: socket.socket, route_table, ASN):
                                     # se crea la nueva ruta
                                     new_route = ASN_new_route + [ASN]
                                     # entonces se debe elegir la ruta más corta
-                                    if(len(ASN_new_route) < len(new_route)):
+                                    if(len(new_route) < len(ASN_routes_self[i])):
                                         ASN_routes_self[i] = new_route
                                         # también se cambian las flags de existed y updated
-                                        existed = True
                                         updated = True
+                                    existed = True
                             # en el caso de que no haya existido la ruta, se agrega a la lista de rutas, agregando nuestro ASN
                             if(not existed):
                                 # se crea la nueva ruta

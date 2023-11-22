@@ -7,7 +7,7 @@ import aux_functions
 # el mensaje a enviar
 mssg = "hola!"
 # estructura
-struct = ["127.0.0.1", 8883, 10, 50, 0, len(mssg.encode()), 0, mssg]
+struct = ["127.0.0.1", 8885, 10, 50, 0, len(mssg.encode()), 0, mssg]
 # se pasa a mensaje
 full_mssg = aux_functions.create_packet(struct)
 # se pasa a bytes
