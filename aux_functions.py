@@ -533,8 +533,10 @@ def run_BGP(socket_sender: socket.socket, route_table, ASN):
         # se envía el mensaje bgp
         socket_sender.sendto(start_mssg, (ip, pair[1]))  
 
+    # tiempo del timer
+    timer_timoeut = 10
     # timer
-    timer = timerList.TimerList(5,1)
+    timer = timerList.TimerList(timer_timoeut,1)
     timer.start_timer(0)
 
     # se deja el socket como no bloqueante
@@ -629,7 +631,7 @@ def run_BGP(socket_sender: socket.socket, route_table, ASN):
                             socket_sender.sendto(new_BGP_mssg, (ip, pair[1]))      
 
                         # luego de enviar los mensaje se reinicia el timer
-                        timer = timerList.TimerList(5,1)
+                        timer = timerList.TimerList(timer_timoeut,1)
                         timer.start_timer(0)      
 
         except BlockingIOError:
