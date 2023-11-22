@@ -1,3 +1,8 @@
+import socket
+
+# tamaño del buffer
+buff_size = 2048
+
 # función que transforma un número en a su versión en string, con una cantidad a elegir de largo máximo
 def to_set_size(num, size):
     # se transforma el número a string
@@ -355,6 +360,58 @@ def create_BGP_message(route_table, ASN):
     # se retorna el mensaje
     return bgp_mssg
 
+# # test para comprobar que funcione 
+
+# bgp_mssg_example = '''BGP_ROUTES
+# 8882
+# 8881 8882
+# 8883 8882
+# 8884 8882
+# END_ROUTES'''
+
+# bgp_output = create_BGP_message("rutas/rutas_R2_v3_mtu.txt", 8882)
+# print("bgp_output = bgp_mssg_example ? {}".format(bgp_output == bgp_mssg_example))
+
+# función que parsea un mensaje BGP, retornando una lista de listas, donde cada lista
+# tiene el "camino" hacia el router de destino
+def parse_BGP_message(bgp_message):
+    # inicio mensaje bgp routes
+    bgp_routes_start = "BGP_ROUTES"
+    # final mensaje bgp routes
+    bgp_routes_end = "END_ROUTES"
+
+    # donde se guardará el ASN del router que envió la tabla
+    asn = None
+
+    # se divide el mensaje por saltos de línea
+    routes_list = bgp_message.split("\n")
+
+    # la primera línea del mensaje debe ser "BGP_ROUTES"
+    # y la última "END_ROUTES", si no se ignora
+    if((routes_list[0] == bgp_routes_start) and (routes_list[len(routes_list)-1] == bgp_routes_end)):
+        # se actualiza el número del asn asociado
+        asn = int(routes_list[1])
+
+        # se actualiza a lista para solo tener las rutas ASN
+        routes_list = routes_list[2:len(routes_list)-1]
+
+        # para cada elemento de la lista
+        for i in range(0, len(routes_list)):
+            # para cada elemento se pasa de string a lista
+            routes_list[i] = routes_list[i].split()
+            # se pasa a una lista de int
+            for j in range(0, len(routes_list[i])):
+                # se pasa de string a int
+                routes_list[i][j] = int(routes_list[i][j])
+
+        # se devuelve un par con el asn y la lista
+        return [asn, routes_list]
+
+    else:
+        # se retorna none
+        return None
+        
+
 # test para comprobar que funcione 
 
 # bgp_mssg_example = '''BGP_ROUTES
@@ -367,19 +424,96 @@ def create_BGP_message(route_table, ASN):
 # bgp_output = create_BGP_message("rutas/rutas_R2_v3_mtu.txt", 8882)
 # print("bgp_output = bgp_mssg_example ? {}".format(bgp_output == bgp_mssg_example))
 
-# función que ejecuta el algoritmo BGP, recibe el socketUDP que representa al router, el archivo de la tabla de rutas y el ASN
-def run_BGP(socket, route_table, ASN):
+# # la lista que debe retornar
+# bgp_list = [8882, [[8881, 8882], [8883, 8882], [8884, 8882]]]
+
+# bgp_output_parse = parse_BGP_message(bgp_output)
+# print("bgp_output_parse = bgp_list ? {}".format(bgp_output_parse == bgp_list))
+
+# función que recibe una tabla de rutas, y retorna una lista de pares con el puerto de destino y 
+# puerto al que se debe envíar para que llegue al destino
+def pairs_dest_hop(route_table):
     # se consiguen las líneas de la tabla de rutas 
     with open(route_table) as f:
         # se leen todas las líneas y se guardan en una lista
         r_lines = f.readlines()
     
+    # lista con los pares
+    pair_dest_hop_list = []
+
+    # se consiguen las direcciones de salto para todos los vecinos
+    for line in r_lines:
+        # se divide cada linea por el espacio
+        line = line.split()
+        # se consifue la dirección (puerto) de destino
+        dest = int(line[1])
+        # se consigue el vecino al que se debe enviar
+        hop = int(line[len(line)-2])
+        # se agrega a la lista de pares
+        pair_dest_hop_list.append((dest, hop))   
+
+    return pair_dest_hop_list
+
+# # test de funcionalidad
+# pair_list = pairs_dest_hop("rutas_completas_3/rutas_R1_v3_mtu.txt")
+# print("pair_list_func = pair_list ? {}".format(pair_list == [(8882,8882), (8883,8882)]))
+
+# función que ejecuta el algoritmo BGP, recibe el socketUDP que representa al router, el archivo de la tabla de rutas y el ASN
+def run_BGP(socket_sender: socket.socket, route_table, ASN):
+    # mensaje start bgp
+    start_bgp = "START_BGP"
+    # inicio mensaje bgp routes
+    bgp_routes_start = "BGP_ROUTES"
+    # final mensaje bgp routes
+    bgp_routes_end = "END_ROUTES"
+    # ip de localhost
+    ip = "127.0.0.1"
+    # ttl
+    ttl = 10
+    # id (va aumentando por cada mensaje)
+    id = 0
+
     # se crea el mensaje BGP que se enviará a los otros routers
     bpg_routes = create_BGP_message(route_table, ASN)
 
-    # lista que guardará pares con el 
+    # lista que guardará pares con el vecino al que se quiere llegar y el vecino al que se debe ir
+    pair_dest_hop_list = pairs_dest_hop(route_table)
+    
+    # se envía el mensaje de inicio para todos los vecinos
+    for pair in pair_dest_hop_list:
+        # se crea el mensaje
+        start_mssg = create_packet([ip, pair[0], ttl, id, 0, len(start_bgp.encode()), 0, start_bgp]).encode()
+        # se aumenta el id
+        id += 1
+        # se envía el mensaje start bgp
+        socket_sender.sendto(start_mssg, (ip, pair[1]))
 
-    # se consiguen las direcciones de salto para todos los vecinos
+    # se envía el mensaje de rutas para todos los vecinos
+    for pair in pair_dest_hop_list:
+        # se crea el mensaje
+        start_mssg = create_packet([ip, pair[0], ttl, id, 0, len(bpg_routes.encode()), 0, bpg_routes]).encode()
+        # se aumenta el id
+        id += 1
+        # se envía el mensaje bgp
+        socket_sender.sendto(start_mssg, (ip, pair[1]))  
+
+    # se empieza a recibir mensajes BGP de los otros vecinos
+    while True:
+        # se recibe un mensaje de vecino
+        mssg, address = socket_sender.recvfrom(buff_size)
+        # se pasa a estructura
+        struct_mssg = parse_packet(mssg)
+        # se consigue el contenido del mensaje
+        mssg_text = struct_mssg[7]
+        # si el mensaje es "START_BGP" se ignora, si no...
+        if(mssg_text != start_bgp):
+            # se le hace parse al mensaje
+            parsed_bgp = parse_BGP_message(mssg_text)
+            # si el mensaje parseado es una lista y no none, entonces se continua
+            if(parsed_bgp != None):
+                # bgp_list = [8882, [[8881, 8882], [8883, 8882], [8884, 8882]]]
+                # se consiguen 
+                pass
 
 
 # clase que representa todas las posibles salidas del router para una dirección de destino específica, en el router actual
