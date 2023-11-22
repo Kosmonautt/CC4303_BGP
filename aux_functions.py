@@ -171,7 +171,6 @@ def fragment_IP_packet(IP_packet, MTU):
 
     # ciclo while en el que se van creando los fragmentos
     while bytes_encapsuled < len_mssg_section:
-        print("loop")
         # nuevo mensaje parcial (en bytes)
         new_mssg = mssg_section[bytes_encapsuled:bytes_encapsuled+new_len_mssg_section]
         # se calcula su tamaño
@@ -501,15 +500,8 @@ def new_route_table(ASN_struct, route_table):
 
 # función que ejecuta el algoritmo BGP, recibe el socketUDP que representa al router, el archivo de la tabla de rutas y el ASN
 def run_BGP(socket_sender: socket.socket, route_table, ASN):
-    print("RUN BGP")
-
-
     # mensaje start bgp
     start_bgp = "START_BGP"
-    # inicio mensaje bgp routes
-    bgp_routes_start = "BGP_ROUTES"
-    # final mensaje bgp routes
-    bgp_routes_end = "END_ROUTES"
     # ip de localhost
     ip = "127.0.0.1"
     # ttl
@@ -550,9 +542,6 @@ def run_BGP(socket_sender: socket.socket, route_table, ASN):
 
     # se empieza a recibir mensajes BGP de los otros vecinos
     while True:
-
-        print("While")
-
         # si se hace timeout, se debe retornar
         if len(timer.get_timed_out_timers()) == 1:
             # se hace que el socket sea bloqueante de nuevo
