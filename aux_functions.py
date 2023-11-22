@@ -601,7 +601,7 @@ def run_BGP(socket_sender: socket.socket, route_table, ASN):
                                 # si la ruta de destino es igual 
                                 if(dest_i == new_route_dest):
                                     # se crea la nueva ruta
-                                    new_route = ASN_new_route.append(ASN)
+                                    new_route = ASN_new_route + [ASN]
                                     # entonces se debe elegir la ruta más corta
                                     if(len(ASN_new_route) < len(new_route)):
                                         ASN_routes_self[i] = new_route
@@ -611,20 +611,20 @@ def run_BGP(socket_sender: socket.socket, route_table, ASN):
                             # en el caso de que no haya existido la ruta, se agrega a la lista de rutas, agregando nuestro ASN
                             if(not existed):
                                 # se crea la nueva ruta
-                                new_route = ASN_new_route.append(ASN)
+                                new_route = ASN_new_route + [ASN]
                                 # se agrega a la lista actual de rutas
                                 ASN_routes_self.append(new_route)
+                                # se actualiza 
+                                updated = True
                     
                     # si se actualizó
                     if(updated):
-                        print("UPDATED")
-
                         # se debe actualizar la tabla de rutas
                         new_route_table([ASN, ASN_routes_self], route_table)
 
                         # y se deben enviar mensaje nuevos
                         # se crea un mensaje de rutas nuevo
-                        new_BGP_mssg = create_BGP_message(route_table, ASN)
+                        new_BGP_mssg_str = create_BGP_message(route_table, ASN)
 
                         # se consigue una nueva lista de pares lista que guardará 
                         # pares con el vecino al que se quiere llegar y el vecino al que se debe ir
@@ -633,7 +633,7 @@ def run_BGP(socket_sender: socket.socket, route_table, ASN):
                         # se envía el mensaje BGP nuevo para todos los vecinos
                         for pair in new_pair_dest_hop_list:
                             # se crea el mensaje
-                            new_BGP_mssg = create_packet([ip, pair[0], ttl, id, 0, len(new_BGP_mssg.encode()), 0, new_BGP_mssg]).encode()
+                            new_BGP_mssg = (create_packet([ip, pair[0], ttl, id, 0, len(new_BGP_mssg_str.encode()), 0, new_BGP_mssg_str])).encode()
                             # se aumenta el id
                             id += 1
                             # se envía el mensaje start bgp
