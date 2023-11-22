@@ -75,6 +75,14 @@ while True:
                     # 
                     print("ALGORITMO EJECUTADO")
 
+                    # el objeto forward list se debe "reiniciar cuando hay BGP"
+                    forwardList = aux_functions.ForwardList((ip, port))
+
+                    # r lines tambíen se debe actualizar
+                    with open(route_table) as f:
+                        # se leen todas las líneas y se guardan en una lista
+                        r_lines = f.readlines()
+
                 else:
                     # se imprime el mensaje
                     print(final_mssg[7])
