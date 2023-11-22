@@ -10,7 +10,7 @@ for i in range(0,10):
     # el mensaje a enviar
     mssg = "{}.este es un mensaje más bien corto".format(i)
     # estructura
-    struct = ["127.0.0.1", 8885, 10, i, 0, len(mssg.encode()), 0, mssg]
+    struct = ["127.0.0.1", 8883, 10, i, 0, len(mssg.encode()), 0, mssg]
     # se pasa a mensaje
     full_mssg = aux_functions.create_packet(struct)
     # se pasa a bytes

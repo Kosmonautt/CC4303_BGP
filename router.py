@@ -78,21 +78,21 @@ while True:
         # si no, se debe hacer forwarding
         else:
             # se consigue la ruta para hacer forwarding
-            (nxt_dir, MTU) = aux_functions.check_routes(r_lines, (struct_mssg[0], int(struct_mssg[1])), forwardList)
+            nxt_dir_MTU = aux_functions.check_routes(r_lines, (struct_mssg[0], int(struct_mssg[1])), forwardList)
 
             # si es None, se descarta, si no, se hace forwarding
-            if(nxt_dir == None):
+            if(nxt_dir_MTU == None):
                 print("No hay rutas hacia {} para paquete {}".format(struct_mssg[1], struct_mssg[0]))
             else:
                 # se debe disminuir su ttl, se crea un mensaje igual pero con el ttl disminuido en 1
                 mssg = (aux_functions.create_packet([struct_mssg[0],struct_mssg[1],struct_mssg[2]-1,struct_mssg[3],struct_mssg[4],struct_mssg[5],struct_mssg[6],struct_mssg[7]])).encode()
 
                 # se consigue la lista de fragmentos tal que sus tamaños sean menor o igual al MTU
-                mssg_list = aux_functions.fragment_IP_packet(mssg, MTU)
+                mssg_list = aux_functions.fragment_IP_packet(mssg, nxt_dir_MTU[1])
 
                 # en envían todos los mensaje de la lista
                 for mssg_frag in mssg_list:
                     # se imprime el forwarding que se realiza
-                    print("redirigiendo paquete {} con destino final {} desde {} hacia {}".format(struct_mssg[0], struct_mssg[1], port, nxt_dir[1]))
+                    print("redirigiendo paquete {} con destino final {} desde {} hacia {}".format(struct_mssg[0], struct_mssg[1], port, nxt_dir_MTU[0][1]))
                     # se hace el forwarding            
-                    router_socket.sendto(mssg_frag, nxt_dir)
+                    router_socket.sendto(mssg_frag, nxt_dir_MTU[0])
