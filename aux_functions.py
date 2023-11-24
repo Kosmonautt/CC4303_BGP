@@ -65,6 +65,10 @@ def parse_packet(IP_packet):
         else:
             mssg += separator
 
+    # al mesnaje se le quita un posible salto de línea en la último posición
+    if (mssg[len(mssg)-1] == "\n" and offset == 0 and flag == 0):
+        mssg = mssg[0:len(mssg)-1]
+
     # se retorna la estrcutura
     return [ip, port, ttl, id, offset, size, flag, mssg]
 
