@@ -71,9 +71,9 @@ while True:
                 # se debe revisar si el mensaje es un START BGP
                 if(final_mssg[7] == start_bgp):
                     # se ejecuta el algoritmo
-                    aux_functions.run_BGP(router_socket, route_table, port)
-                    # 
-                    print("ALGORITMO EJECUTADO")
+                    new_BGP_table = aux_functions.run_BGP(router_socket, route_table, port)
+                    # se imprime la nueva tabla BGP 
+                    print("New BGP table\n{}".format(new_BGP_table))
 
                     # el objeto forward list se debe "reiniciar cuando hay BGP"
                     forwardList = aux_functions.ForwardList((ip, port))

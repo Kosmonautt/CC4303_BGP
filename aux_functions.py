@@ -548,8 +548,8 @@ def run_BGP(socket_sender: socket.socket, route_table, ASN):
         if len(timer.get_timed_out_timers()) == 1:
             # se hace que el socket sea bloqueante de nuevo
             socket_sender.setblocking(True)
-            # se retorna
-            return
+            # se retorna la nueva tabal BGP
+            return create_BGP_message(route_table, ASN)
 
         try:
             # se recibe un mensaje de vecino
