@@ -632,7 +632,6 @@ def run_BGP(socket_sender: socket.socket, route_table, ASN):
                             # si es que el router no estaba en la tabla, la dirección de destino
                             # es uno mismo (el router), y el mismo router no está en la sub ruta
                             if(not (was_in_table) and in_dest == ASN and (not (ASN in sub_route))):
-                                print("NUEVO CASO")
                                 # se añade la lista inversa 
                                 new_route_in = ASN_new_route
                                 new_route_in.reverse()
