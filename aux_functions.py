@@ -611,6 +611,34 @@ def run_BGP(socket_sender: socket.socket, route_table, ASN):
                                 ASN_routes_self.append(new_route)
                                 # se actualiza 
                                 updated = True
+                        # en caso de que el ASN esté en la lista
+                        else:
+                            # se conisgue el destino de la ruta
+                            in_dest = ASN_new_route[0]
+                            # se consigue el comiezo de la ruta
+                            in_start = ASN_new_route[len(ASN_new_route)-1]
+                            # se consigue la sublista entre el segundo y penultimo
+                            sub_route = ASN_new_route[1:len(ASN_new_route)-1]
+                            # dice si la dirección de origne ya existía en nuestra tabal BGP
+                            was_in_table = False
+                            # se revisa la lista de rutas actuales
+                            for i in range(0, len_ASN_routes_self):
+                                # para cada uno se consigue la i-ésima dirección de destino
+                                dest_i = ASN_routes_self[i][0]
+                                # si la ruta de destino es igual al comienzo de la ruta nueva
+                                if(dest_i == in_start):
+                                    # entonces estaba en la tabla
+                                    was_in_table = True
+                            # si es que el router no estaba en la tabla, la dirección de destino
+                            # es uno mismo (el router), y el mismo router no está en la sub ruta
+                            if(not (was_in_table) and in_dest == ASN and (not (ASN in sub_route))):
+                                print("NUEVO CASO")
+                                # se añade la lista inversa 
+                                new_route_in = ASN_new_route
+                                new_route_in.reverse()
+                                ASN_routes_self.append(new_route_in)
+                                # y se avisa que se actualizó
+                                updated =  True
                     
                     # si se actualizó
                     if(updated):
